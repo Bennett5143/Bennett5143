@@ -22,7 +22,7 @@
 
 ## 📊 Stats
 
-![GitHub stats](https://github-readme-stats.vercel.app/api?username=YOUR_USERNAME&show_icons=true)
+![GitHub stats](https://github-readme-stats.vercel.app/api?username=Bennett5143&show_icons=true)
 
 <!--
 **Bennett5143/Bennett5143** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
