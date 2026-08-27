@@ -1,0 +1,53 @@
+name: Update profile stats
+
+on:
+  schedule:
+    # Off the full hour on purpose: "The schedule event can be delayed during
+    # periods of high loads of GitHub Actions workflow runs. High load times
+    # include the start of every hour." 05:17 UTC = 07:17 CEST.
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+# The repository default is read-only, so contents:write has to be requested
+# explicitly here. Only contents is granted; every other permission stays
+# unset, which means none. Write is needed for exactly one thing: pushing the
+# refreshed README back to main.
+permissions:
+  contents: write
+
+# A scheduled run and a manual run must not race each other into the same push.
+concurrency:
+  group: update-profile-stats
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Record the runner's Python
+        run: python3 --version
+
+      # The generator is stdlib-only, so the runner's preinstalled Python is
+      # enough and no setup-python step (or pip install) is needed.
+      - name: Run tests
+        run: python3 -m unittest discover -s tests
+
+      - name: Regenerate README
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/generate_readme.py
+
+      - name: Commit and push only if the card changed
+        run: |
+          if git diff --quiet -- README.md; then
+            echo "README unchanged — nothing to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Stage the one file this job is allowed to touch, never -A.
+          git add README.md
+          git commit -m "chore: refresh profile stats"
+          git push
